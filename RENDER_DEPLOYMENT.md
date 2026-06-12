@@ -1,33 +1,32 @@
-# Render Deployment Guide
+# Render Deployment Guide (PostgreSQL)
 
-This document outlines the complete process to deploy **ExpedientLog** on Render.
+This document outlines the complete process to deploy **ExpedientLog** on Render using **PostgreSQL**.
 
 ## Overview
 
 ExpedientLog is a PHP-based web application that manages expedient logs and tickets. On Render, it will run as:
 - **Web Service:** PHP 8.2 with Apache (Docker)
-- **Managed Database:** MySQL 8.0+ (Render's database service)
+- **Managed Database:** PostgreSQL 14+ (Render's database service)
 - **Persistent Storage:** Render Disk for uploaded files
 
 ---
 
 ## Prerequisites
 
-- GitHub account with this repository pushed (commit already ready: `504b3c0`)
+- GitHub account with this repository pushed
 - Render account (https://render.com)
-- Basic knowledge of environment variables and database setup
+- PostgreSQL client (optional, for local schema setup)
 
 ---
 
-## Step 1: Repository Already Prepared ✅
+## Step 1: Repository Ready ✅
 
-Your repository is ready with:
-- ✅ `Dockerfile` configured for PHP 8.2 + Apache
-- ✅ `.dockerignore` optimizing image size
-- ✅ `.env.example` with full config reference
-- ✅ Commit `504b3c0` pushed to GitHub main branch
-
-Verify on GitHub: https://github.com/Pateh-mj/ExpedientLog
+Your repository is prepared with:
+- ✅ `Dockerfile` configured for PHP 8.2 + Apache + PostgreSQL support
+- ✅ `schema.sql` migrated to PostgreSQL syntax
+- ✅ [src/Core/DB.php](src/Core/DB.php) updated to use PostgreSQL PDO driver
+- ✅ `.env.example` configured for PostgreSQL
+- ✅ Latest commit pushed to GitHub main branch
 
 ---
 
@@ -39,10 +38,10 @@ Verify on GitHub: https://github.com/Pateh-mj/ExpedientLog
 3. Choose **GitHub** as auth provider
 4. Authorize Render to access your GitHub repositories
 
-### 2.2 Create New Service
+### 2.2 Create New Web Service
 1. From the Render dashboard, click **New +** → **Web Service**
 2. Select **Build and deploy from a Git repository**
-3. Search for **ExpedientLog** (or Pateh-mj/ExpedientLog)
+3. Search for **ExpedientLog** (Pateh-mj/ExpedientLog)
 4. Click **Connect** next to your repository
 
 ---
@@ -60,60 +59,66 @@ In the service creation form, set:
 | **Root Directory** | `.` (leave blank or use root) |
 | **Dockerfile Path** | `./Dockerfile` (default) |
 
-### 3.2 Environment Variables (Will Add Later)
-Leave blank for now; we'll add them after the database is created.
-
-### 3.3 Instance Type
+### 3.2 Instance Type
 - Start with **Starter** ($7/month) or **Standard** for production load
-- Can upgrade later if needed
+- Can upgrade later
 
-### 3.4 Create Service
+### 3.3 Create Service
 Click **Create Web Service**. Render will begin building the Docker image.
+
+**Leave environment variables blank for now** — we'll add them after the database is created.
 
 ---
 
-## Step 4: Create Managed MySQL Database
+## Step 4: Create Managed PostgreSQL Database
 
-### 4.1 Provision MySQL
-1. From the Render dashboard, click **New +** → **MySQL**
+### 4.1 Provision PostgreSQL
+1. From the Render dashboard, click **New +** → **PostgreSQL**
 2. Configure:
 
 | Setting | Value |
 |---------|-------|
 | **Name** | `expedientlog-db` |
 | **Database** | `exp_log` |
-| **Username** | `root` (or custom) |
+| **User** | `postgres` (auto-generated or custom) |
 | **Region** | Same as web service (e.g., Ohio, Oregon) |
+| **PostgreSQL Version** | 14+ (default recommended) |
 | **Pricing Plan** | **Starter** ($15/month) or higher |
 
 3. Click **Create Database**
-4. Render will provision the MySQL instance (takes ~10 minutes)
+4. Render will provision PostgreSQL (takes ~5-10 minutes)
 
 ### 4.2 Get Connection Details
-Once the database is ready:
+Once the database is running:
 1. Click on the **expedientlog-db** service
 2. Go to the **Connections** tab
-3. Copy these values:
-   - **Internal Database URL** (for same region connections)
-   - Or extract from the URL: `host`, `port`, `user`, `password`, `database`
+3. Copy the **Internal Database URL**:
+   ```
+   postgresql://postgres:your_password@internal-hostname:5432/exp_log
+   ```
 
-Example URL format: `mysql://root:password@hostname:3306/exp_log`
+Extract the values:
+- **Host:** `internal-hostname` (the part after `@`)
+- **Port:** `5432`
+- **Database:** `exp_log`
+- **User:** `postgres`
+- **Password:** (the part after `:` before `@`)
 
 ---
 
-## Step 5: Set Environment Variables
+## Step 5: Set Environment Variables on Web Service
 
-### 5.1 Add Variables to Web Service
-1. Go back to the **expedientlog** web service
+### 5.1 Add Variables
+1. Go to your **expedientlog** web service
 2. Click **Environment** (left sidebar)
 3. Add the following variables:
 
 #### Database Variables
 ```
 DB_HOST=<internal-host-from-db-connections-tab>
-DB_PORT=3306
+DB_PORT=5432
 DB_NAME=exp_log
-DB_USER=root
+DB_USER=postgres
 DB_PASS=<password-from-database>
 ```
 
@@ -125,7 +130,7 @@ APP_TIMEZONE=Africa/Lusaka
 APP_ENV=production
 ```
 
-#### Optional: S3 for Persistent Uploads
+#### Optional: S3 for Persistent Uploads (Recommended)
 ```
 S3_BUCKET=your-bucket-name
 S3_KEY=your-aws-access-key
@@ -134,50 +139,59 @@ S3_REGION=us-east-1
 ```
 
 ### 5.2 Save & Redeploy
-After adding variables:
 1. Click **Save Changes**
-2. Render will automatically redeploy the web service with new env vars
+2. Render will automatically redeploy with the new environment variables
 3. Check **Logs** to confirm the service starts without errors
 
 ---
 
 ## Step 6: Initialize Database Schema
 
-### 6.1 Option A: Using Render's Database Admin UI (Easiest)
-1. Click on your **expedientlog-db** database service
-2. Look for a **Database Administration Tool** link (e.g., phpMyAdmin or Adminer if configured)
-3. Or use the **Connections** tab to get credentials and connect with a local tool
-
-### 6.2 Option B: Using MySQL CLI (Local)
+### 6.1 Option A: Using psql (Recommended for Render)
 From your local machine:
 
 ```bash
-# Set credentials from Render database
-MYSQL_HOST="<your-render-host>"
-MYSQL_PORT="3306"
-MYSQL_USER="root"
-MYSQL_PASSWORD="<your-render-password>"
-MYSQL_DATABASE="exp_log"
+# Get credentials from Render database Connections tab
+POSTGRES_HOST="<your-internal-host>"
+POSTGRES_PORT="5432"
+POSTGRES_USER="postgres"
+POSTGRES_PASSWORD="<your-password>"
+POSTGRES_DATABASE="exp_log"
 
 # Run the schema
-mysql -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" < schema.sql
+export PGPASSWORD="$POSTGRES_PASSWORD"
+psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DATABASE" -f schema.sql
 ```
+
+### 6.2 Option B: Using DBeaver or pgAdmin (GUI)
+1. Download and install [DBeaver](https://dbeaver.io) or use [pgAdmin](https://www.pgadmin.org)
+2. Create a new PostgreSQL connection using the Render database credentials (from Step 4.2)
+3. Open the SQL editor and paste the contents of `schema.sql`
+4. Execute the SQL
 
 ### 6.3 Verify Tables
 Log into your database and run:
 
-```sql
-SHOW TABLES;
+```bash
+psql -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DATABASE" -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public';"
 ```
 
-You should see tables like: `users`, `tickets`, `announcements`, etc.
+You should see:
+```
+      table_name
+─────────────────
+ users
+ tickets
+ announcements
+(3 rows)
+```
 
 ---
 
 ## Step 7: Verify Deployment
 
 ### 7.1 Check Web Service Status
-1. Go to the **expedientlog** web service
+1. Go to the **expedientlog** web service on Render dashboard
 2. Check the **Status** indicator:
    - 🟢 **Running** = Service is live
    - 🟡 **Deploying** = Still building/starting
@@ -188,7 +202,7 @@ You should see tables like: `users`, `tickets`, `announcements`, etc.
 2. Look for:
    - `apache2-foreground` starting successfully
    - No fatal PHP errors
-   - Successful database connection
+   - No PDO connection errors
 
 **Example healthy log output:**
 ```
@@ -199,13 +213,13 @@ AH00094: Command line: 'apache2 -D FOREGROUND'
 1. Go to the **Render Dashboard** → **expedientlog** service
 2. Look for the **URL** at the top (e.g., `https://expedientlog.onrender.com`)
 3. Click the link or copy it to your browser
-4. You should see the ExpedientLog login page or dashboard
+4. You should see the ExpedientLog login page
 
 ### 7.4 Test Functionality
 - ✅ Load the homepage / login page
-- ✅ Test authentication (login with test user)
-- ✅ Navigate to main features (dashboard, announcements, etc.)
-- ✅ Test file uploads (if applicable)
+- ✅ Verify database connection (check logs for errors)
+- ✅ Test authentication (create test user or log in)
+- ✅ Navigate to dashboard, announcements, etc.
 
 ---
 
@@ -226,20 +240,21 @@ AH00094: Command line: 'apache2 -D FOREGROUND'
 |---------|-------|
 | **Name** | `expedientlog-uploads` |
 | **Mount Path** | `/var/www/html/storage/uploads` |
-| **Size** | Start with 10GB ($5/month per 10GB) |
+| **Size** | 10GB ($5/month per 10GB) |
 
 5. Click **Create Disk**
 
 ### 8.3 Verify Disk is Mounted
 - Service will automatically redeploy
 - Check logs for successful start
-- Uploaded files will now persist across restarts
+- Uploaded files will now persist across restarts/redeploys
 
-### 8.4 Alternative: Use S3 (More Scalable)
+### 8.4 Alternative: Use S3 (Recommended for Scale)
 Instead of a Render Disk:
 1. Configure AWS S3 credentials (see Step 5.1)
 2. Update file upload code in [src/Core/FileUpload.php](src/Core/FileUpload.php) to use S3
-3. Uploads scale better and cost less for large files
+3. More cost-effective for large files
+4. Better for multi-instance deployments
 
 ---
 
@@ -250,8 +265,8 @@ Instead of a Render Disk:
 2. Click **Settings** (left sidebar)
 3. Scroll to **Custom Domain**
 4. Enter your domain (e.g., `logs.example.com`)
-5. Render will provide DNS instructions
-6. Update your DNS provider to point to Render's CNAME
+5. Render will provide DNS instructions (CNAME)
+6. Update your DNS provider to point to Render
 
 ### 9.2 SSL/TLS
 - Render automatically provisions free SSL certificates via Let's Encrypt
@@ -267,51 +282,58 @@ Instead of a Render Disk:
 2. Look for errors like `DB connection failed` or PHP syntax errors
 3. Common issues:
    - `DB_HOST` or `DB_PASS` incorrect → verify in database Connections tab
-   - Missing PHP extensions → confirm Dockerfile installs them (it does)
+   - Port is `5432` (not `3306` like MySQL)
+   - Missing PostgreSQL PDO extension → Dockerfile includes it
 
 **Solution:**
 - Fix environment variables
-- Redeploy: **Dashboard** → Service → **Rerun latest deploy**
+- Click **Rerun latest deploy** to redeploy
 
 ### Can't Connect to Database
 1. Verify database service is **Running** (check database dashboard)
-2. Confirm internal host is used (not external URL if in same region)
-3. Try connecting locally to test credentials:
+2. Confirm you're using the **internal** host (starts with `internal-`)
+3. Verify port is `5432` (PostgreSQL default)
+4. Test locally:
    ```bash
-   mysql -h <host> -u root -p<password> exp_log -e "SELECT 1;"
+   psql -h <host> -p 5432 -U postgres -d exp_log -c "SELECT 1;"
    ```
 
 ### 403 Forbidden or 404 Errors
 - Verify `.htaccess` is in the repo (it is)
 - Dockerfile enables `mod_rewrite` (correct)
 - Try accessing `https://yoururl/public/index.php` directly
-- Check if the router is parsing requests correctly in logs
+- Check router in [src/Core/Router.php](src/Core/Router.php)
+
+### Database Timezone Issues
+- PostgreSQL timezone is set via `SET timezone` in [src/Core/DB.php](src/Core/DB.php)
+- Uses `APP_TIMEZONE` environment variable
+- Default: `Africa/Lusaka` (UTC+2)
 
 ### Files Lost After Restart
 - Confirm persistent disk is mounted at `/var/www/html/storage/uploads`
-- Check disk size hasn't been exceeded
-- Use S3 for more reliability (see Step 8.4)
+- Check **Disks** tab on web service
+- Use S3 for more reliability (Step 8.4)
 
 ---
 
 ## Monitoring & Maintenance
 
-### 1. Enable Auto-Deploy from GitHub
+### 1. Auto-Deploy from GitHub
 - Already enabled by default
-- Any commit to `main` triggers a redeploy
+- Any commit to `main` triggers redeploy
 
 ### 2. Monitor Service Health
-- Render dashboard shows CPU, memory, and request metrics
-- Set up alerts in **Render Dashboard** → **Account Settings** → **Notifications**
+- Render dashboard shows CPU, memory, request metrics
+- Set up alerts: **Render Dashboard** → **Account Settings** → **Notifications**
 
 ### 3. Database Backups
-- Render's managed MySQL includes daily backups (retention depends on plan)
-- Download backups from the database service dashboard if needed
+- Render's managed PostgreSQL includes daily backups (retention by plan)
+- Download backups from database service dashboard if needed
 
 ### 4. Scaling
 - Increase instance size if traffic grows
-- Add more replicas (only on paid plans)
-- Use Render's analytics to monitor performance
+- Database can be scaled separately
+- Use Render analytics to monitor performance
 
 ---
 
@@ -320,50 +342,69 @@ Instead of a Render Disk:
 | Service | Tier | Monthly Cost |
 |---------|------|--------------|
 | Web Service (PHP + Apache) | Starter | $7 |
-| MySQL Database | Starter | $15 |
+| PostgreSQL Database | Starter | $15 |
 | Persistent Disk (10GB) | - | $5 |
 | **Total** | | **~$27/month** |
 
-*Costs increase with traffic, storage, and higher instance tiers.*
+*Higher tiers and S3 storage will increase costs.*
 
 ---
 
-## Success Criteria
+## Success Criteria ✅
 
 Your deployment is successful when:
 
 ✅ Web service status is **Running** (green)  
-✅ Database is **Running** (green)  
-✅ App is accessible at your Render URL (https://...)  
-✅ Can log in with test credentials  
-✅ Database tables are present  
-✅ File uploads work (or S3 configured)  
+✅ PostgreSQL database is **Running** (green)  
+✅ App loads at your Render URL (https://...)  
+✅ Can navigate to login page  
+✅ Database tables exist (verified via psql)  
 ✅ Logs show no critical errors  
+✅ File uploads work (or S3 configured)  
 ✅ Persistent disk mounted (if using disk for uploads)  
 
 ---
 
 ## Next Steps Summary
 
-1. ✅ **Repository pushed** (commit `504b3c0` on GitHub main)
-2. **Create Render web service** from GitHub integration
-3. **Create Render MySQL database**
-4. **Set environment variables** on web service
-5. **Initialize schema** (`schema.sql`) in database
-6. **Add persistent disk** for file uploads
-7. **Verify** the app is running and accessible
+1. ✅ **Repository updated** (PostgreSQL schema, DB.php, Dockerfile)
+2. ✅ **Code pushed to GitHub**
+3. **Create Render web service** from GitHub integration
+4. **Create Render PostgreSQL database**
+5. **Set environment variables** on web service (DB_HOST, DB_PASS, etc.)
+6. **Initialize schema** (`schema.sql`) via psql or GUI
+7. **Verify** app is running and accessible
+8. **Add persistent disk** for file uploads (or use S3)
+
+---
+
+## PostgreSQL vs MySQL: Key Differences
+
+| Feature | MySQL | PostgreSQL |
+|---------|-------|------------|
+| Default port | 3306 | 5432 |
+| Default user | root | postgres |
+| Boolean type | TINYINT(1) | BOOLEAN |
+| Auto-increment | AUTO_INCREMENT | SERIAL |
+| String escaping | Backticks | Double quotes or unquoted |
+| Timezone | SET time_zone | SET timezone |
+| JSON support | Limited | Excellent |
+| Transactions | ACID | ACID (stricter) |
 
 ---
 
 ## Additional Resources
 
 - [Render Documentation](https://render.com/docs)
+- [Render PostgreSQL Guide](https://render.com/docs/postgresql)
 - [Render Docker Guide](https://render.com/docs/docker)
-- [Render MySQL Guide](https://render.com/docs/mysql)
-- [Render Disks](https://render.com/docs/disks)
-- [Render Custom Domains](https://render.com/docs/custom-domains)
+- [PostgreSQL Documentation](https://www.postgresql.org/docs/)
+- [PHP PDO PostgreSQL](https://www.php.net/manual/en/ref.pdo-pgsql.php)
 
 ---
 
 **Last Updated:** 2026-06-12  
+**Database:** PostgreSQL  
 **Status:** Ready for Render Deployment
+
+
