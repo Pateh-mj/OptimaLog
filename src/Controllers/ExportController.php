@@ -28,7 +28,7 @@ class ExportController
         if ($dept !== 'All')         $parts[] = $dept;
         if ($typeFilter !== 'all')   $parts[] = ucfirst($typeFilter);
         if ($search !== '')          $parts[] = 'search-' . preg_replace('/[^a-z0-9]/i', '_', $search);
-        $filename = 'ExpedientLog_' . implode('_', $parts) . '.csv';
+        $filename = 'OptimaLog_' . implode('_', $parts) . '.csv';
 
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . $filename . '"');

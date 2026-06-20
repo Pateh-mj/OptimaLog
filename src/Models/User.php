@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Core\DB;
+use App\Core\FileUpload;
 
 class User
 {
@@ -88,6 +89,14 @@ class User
 
     public static function delete(int $id): void
     {
+        $images = DB::all(
+            'SELECT image_path FROM tickets WHERE user_id = ? AND image_path IS NOT NULL',
+            [$id]
+        );
+        foreach ($images as $row) {
+            FileUpload::delete($row['image_path']);
+        }
+        DB::query('DELETE FROM tickets WHERE user_id = ?', [$id]);
         DB::query('DELETE FROM users WHERE id = ?', [$id]);
     }
 

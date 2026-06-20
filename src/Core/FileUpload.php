@@ -7,6 +7,7 @@ namespace App\Core;
 class FileUpload
 {
     private const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    private const MIME_EXT      = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp'];
     private const MAX_SIZE      = 5_242_880; // 5MB
 
     public static function handleImage(string $fieldName): array
@@ -30,8 +31,8 @@ class FileUpload
             return ['path' => null, 'error' => 'Only JPG, PNG, GIF, and WebP images are allowed.'];
         }
 
-        $ext      = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $filename = time() . '_' . bin2hex(random_bytes(8)) . '.' . strtolower($ext);
+        $ext      = self::MIME_EXT[$info['mime']];
+        $filename = time() . '_' . bin2hex(random_bytes(8)) . '.' . $ext;
         $destDir  = APP_ROOT . '/storage/uploads/';
         $destPath = $destDir . $filename;
 

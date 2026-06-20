@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 09, 2026 at 11:30 AM
+-- Generation Time: Jun 21, 2026 at 01:28 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `exp_log`
+-- Database: `optima_log`
 --
 
 -- --------------------------------------------------------
@@ -91,7 +91,9 @@ INSERT INTO `tickets` (`id`, `user_id`, `task`, `created_at`, `updated_at`, `is_
 (41, 2, 'Tried to log an activity with a photo upload. Hey the edit modal fix works.\r\nLemme add it as knowledge', '2025-12-02 15:00:49', '2025-12-02 15:18:24', 1, 'Lessons Learned', 'IT Systems Upgrade', '1764687649_usb-3-0-sata-iii-hard-drive-adapter.jpg'),
 (42, 3, 'Tried also to log an activity with a photo upload, and save it as knowledge.', '2025-12-02 15:06:21', NULL, 1, 'General', 'Field Work', '1764687981_c901c7918af34451bbb08d0fdef15d7b.jpg'),
 (43, 5, 'I have been added to the team.', '2026-06-02 20:50:03', NULL, 1, 'Templates', 'General / Other', '1780433403_bc68fa879d3b89cf.png'),
-(44, 2, 'I updated the server\'s operating system and created a user credentials for our inters', '2026-06-04 21:59:24', NULL, 1, 'IT / Tech', 'IT Systems Upgrade', '1780610364_5ff818844adeb6b2.jpg');
+(44, 2, 'I updated the server\'s operating system and created a user credentials for our inters', '2026-06-04 21:59:24', NULL, 1, 'IT / Tech', 'IT Systems Upgrade', '1780610364_5ff818844adeb6b2.jpg'),
+(45, 5, 'Health and Operations professional with over 3 years’ experience in facility management, operational coordination, and quality assurance in health and corporate environments. Skilled in optimising patient flow, improving service efficiency, and implementing standardised processes. Demonstrated success in data management, workflow optimisation, and stakeholder engagement to enhance operational performance. Adept at ensuring facility readiness, improving customer experience, and supporting continuous improvement initiatives. Proficient in digital tools for data analysis, reporting, and workflow monitoring.\r\nI have a strong foundation in research and epidemiological analysis, with hands-on experience in study design, data collection, statistical analysis, and evidence synthesis. I have supported large-scale health research at the Cancer Diseases Hospital and contributed to analytical work aligned with national and global health priorities.', '2026-06-09 10:19:21', NULL, 1, 'General', 'General / Other', NULL),
+(46, 3, 'Stability of Tenure of Personnel.', '2026-06-15 15:49:25', NULL, 0, NULL, 'Q4 Financial Audit', NULL);
 
 -- --------------------------------------------------------
 
@@ -116,10 +118,10 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `password`, `role`, `department`, `full_name`, `email`, `phone`, `created_at`) VALUES
-(1, 'Administrator', '$2y$10$E9MiXONOCb7tFqyyMBT.buBUdCicSZBnOCyd0BwNPYwhQnRfYHqMe', 'supervisor', 'General', 'Administrator', '', '', '2025-11-10 14:48:27'),
+(1, 'Supervisor', '$2y$10$9P0Uidu6YLabndRq/0iHiexu10j5aQX/oSYW6zp5ohmn4gSb21MpS', 'supervisor', 'HR', 'Mike Jasper', 'supervisor@gmail.com', '+260970653996', '2025-11-10 14:48:27'),
 (2, 'Expedia1', '$2y$10$Wt4gZ.gVSEwKMlO.49qvkulm46V7/70IP2n55IiCMYLvLwh6RMYfq', 'employee', 'Technical', 'Expedia1', '', '', '2025-11-10 14:50:26'),
 (3, 'Expedia2', '$2y$10$HUWB08B9HOqdkh3Ufzal8u/ZQxUl4PuDDLJBS65YsPJpZozuefBaq', 'employee', 'Technical', 'Expedia2', '', '', '2025-11-26 12:06:51'),
-(5, 'nchimunya', '$2y$10$aiXqtLRbuAqGNDb87h99JuLO.qb27fCi2SnPJWmsT/Qu.J2qNzJCG', 'employee', 'News', 'Nchimunya', '', '', '2025-11-27 20:30:04'),
+(5, 'nchimunya', '$2y$10$mSpZNQ1OUz1584/JxUnFkei8U1nMXEvuHlJ2apVzfpZbWYnI0PPh6', 'employee', 'News', 'Nchimunya', '', '', '2025-11-27 20:30:04'),
 (6, 'Supadmin', '$2y$10$Taq6FkP7eCrLogkPGseU6OPVfE6Z8EdFBnVB.SDrkpL8PgXTbJ7hy', 'supervisor', 'General', 'Supadmin', '', '', '2026-06-02 19:51:30');
 
 --
@@ -163,7 +165,7 @@ ALTER TABLE `announcements`
 -- AUTO_INCREMENT for table `tickets`
 --
 ALTER TABLE `tickets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=47;
 
 --
 -- AUTO_INCREMENT for table `users`

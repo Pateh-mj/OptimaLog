@@ -11,9 +11,10 @@ class Announcement
     public static function all(): array
     {
         return DB::all(
-            "SELECT a.id, a.title, a.body, a.is_pinned, a.created_at, u.username AS author
+            "SELECT a.id, a.title, a.body, a.is_pinned, a.created_at,
+                    COALESCE(u.username, 'Deleted User') AS author
              FROM announcements a
-             JOIN users u ON a.created_by = u.id
+             LEFT JOIN users u ON a.created_by = u.id
              ORDER BY a.is_pinned DESC, a.created_at DESC"
         );
     }
@@ -21,9 +22,10 @@ class Announcement
     public static function recent(int $limit = 5): array
     {
         return DB::all(
-            "SELECT a.id, a.title, a.body, a.is_pinned, a.created_at, u.username AS author
+            "SELECT a.id, a.title, a.body, a.is_pinned, a.created_at,
+                    COALESCE(u.username, 'Deleted User') AS author
              FROM announcements a
-             JOIN users u ON a.created_by = u.id
+             LEFT JOIN users u ON a.created_by = u.id
              ORDER BY a.is_pinned DESC, a.created_at DESC
              LIMIT ?",
             [$limit]

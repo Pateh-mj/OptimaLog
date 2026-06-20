@@ -99,9 +99,13 @@ if (!function_exists('is_admin')) {
 }
 
 if (!function_exists('format_date')) {
-    function format_date(string $datetime, string $format = 'j M Y'): string
+    function format_date(?string $datetime, string $format = 'j M Y'): string
     {
-        return date($format, strtotime($datetime));
+        if (empty($datetime)) {
+            return '—';
+        }
+        $ts = strtotime($datetime);
+        return $ts !== false ? date($format, $ts) : '—';
     }
 }
 

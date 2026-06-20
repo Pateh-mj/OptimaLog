@@ -35,12 +35,12 @@ if ($debug) {
 date_default_timezone_set($_ENV['APP_TIMEZONE'] ?? 'Africa/Lusaka');
 
 // Determine base path from script location
-// When accessed via rewrite: SCRIPT_NAME = /ExpedientLog/public/index.php
-// BASE_PATH should be /ExpedientLog
-$scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '');          // /ExpedientLog/public
-$basePath  = dirname($scriptDir);                              // /ExpedientLog
+// When accessed via rewrite: SCRIPT_NAME = /OptimaLog/public/index.php
+// BASE_PATH should be /OptimaLog
+$scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '');          // /OptimaLog/public
+$basePath  = dirname($scriptDir);                              // /OptimaLog
 if ($basePath === '/' || $basePath === '\\' || $basePath === '.') {
     $basePath = '';
 }
 define('BASE_PATH', $basePath);
-define('APP_NAME',  $_ENV['APP_NAME'] ?? 'ExpedientLog');
+define('APP_NAME',  $_ENV['APP_NAME'] ?? 'OptimaLog');

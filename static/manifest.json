@@ -1,6 +1,6 @@
 {
-  "name": "ExpedientLog",
-  "short_name": "ExpedientLog",
+  "name": "OptimaLog",
+  "short_name": "OptimaLog",
   "description": "Log your daily wins instantly",
   "start_url": "/",
   "display": "standalone",

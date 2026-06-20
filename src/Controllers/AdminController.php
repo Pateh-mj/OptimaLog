@@ -126,6 +126,11 @@ class AdminController
             redirect('/admin/users');
         }
 
+        if (!User::findById($id)) {
+            Session::flash('error', 'User not found.');
+            redirect('/admin/users');
+        }
+
         $username = trim($_POST['username']);
         if (User::usernameExists($username, $id)) {
             Session::flash('error', 'That username is already taken by another user.');
@@ -156,8 +161,8 @@ class AdminController
         CSRF::verifyOrFail();
 
         $id = (int) ($_POST['id'] ?? 0);
-        if (!$id) {
-            Session::flash('error', 'Invalid user.');
+        if (!$id || !User::findById($id)) {
+            Session::flash('error', 'User not found.');
             redirect('/admin/users');
         }
 

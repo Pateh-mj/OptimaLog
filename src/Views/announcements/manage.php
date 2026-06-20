@@ -32,7 +32,7 @@
             <?php endif; ?>
             <div class="announcement-title"><?= e($ann['title']) ?></div>
             <div style="font-size:.825rem;color:var(--text-muted);margin-top:.25rem;line-height:1.5">
-              <?= nl2br(e(mb_strimwidth($ann['body'], 0, 160, '…'))) ?>
+              <?= nl2br(e(strlen($ann['body']) > 160 ? substr($ann['body'], 0, 160) . '…' : $ann['body'])) ?>
             </div>
             <div class="announcement-meta" style="margin-top:.5rem">
               <i class="fas fa-user-tie"></i> <?= e($ann['author']) ?>

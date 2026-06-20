@@ -1,4 +1,4 @@
-/* ExpedientLog — app.js */
+/* OptimaLog — app.js */
 'use strict';
 
 // ── Clock ──────────────────────────────────────────────────
@@ -275,7 +275,7 @@ function initDraftSave() {
   const form      = document.getElementById('log-form');
   if (!textarea) return;
 
-  const KEY = 'expedientlog_draft_' + (document.querySelector('meta[name="base-url"]')?.content ?? '');
+  const KEY = 'OptimaLog_draft_' + (document.querySelector('meta[name="base-url"]')?.content ?? '');
 
   // Restore on load
   const saved = localStorage.getItem(KEY);
